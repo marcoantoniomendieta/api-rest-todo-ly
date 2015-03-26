@@ -31,16 +31,80 @@ frisby.create('Create inbox item')
 			.put('https://todo.ly/api/items/' + itemId + '.json', itemChecked, {json: true})
 			.inspectJSON()
 			.expectJSON(itemChecked)
-			//.afterJSON(function(itemResponseData){
-			//	itemId = itemResponseData.Id;		
-			//})
+			.afterJSON(function(itemResponseData){
+				frisby.create('Delete inbox item')
+				.delete('https://todo.ly/api/items/' + itemId + '.json', {json: true})
+				.inspectJSON()
+				.expectJSON({
+						Deleted: true
+				})
+				.toss();	
+			})
 			.toss();
 	})
 	.toss();
+var projectTest = {
+	"Content": "TestProjectA"
+};
+var projectAndItem;
 
+frisby.create('Create New project')
+	.post('https://todo.ly/api/projects.json', projectTest, {json: true})
+	.inspectJSON()
+	.expectJSON(projectTest)
+	.afterJSON(function(projectResponseData){
+		var projectTestId = projectResponseData.Id;
+		var itemTest  = {"Content": "TestItem", "ProjectId": projectTestId};
+		frisby.create('Create new item with project id')
+				.post('https://todo.ly/api/items.json', itemTest,{json: true})
+				.inspectJSON()
+				.expectJSON(itemTest)
+				.afterJSON(function(projectResponseData){
+					frisby.create('Delete project and item')
+					.delete('https://todo.ly/api/projects/' + projectTestId + '.json', {json: true})
+					.expectJSON({
+						Deleted: true
+					})
+					.toss();
+					
+				})
+				.toss();
+	})
+	.toss();
+	
+	
+var projectTestB = {
+	"Content": "TestProjectB"
+};
+var projectAndItem;
 
+frisby.create('Create New project')
+	.post('https://todo.ly/api/projects.json', projectTestB, {json: true})
+	.inspectJSON()
+	.expectJSON(projectTestB)
+	.afterJSON(function(projectResponseData){
+		var projectTestId = projectResponseData.Id;
+		var itemTest  = {"Content": "TestItem", "ProjectId": projectTestId};
+		frisby.create('Create new item with project id')
+				.post('https://todo.ly/api/items.json', itemTest,{json: true})
+				.inspectJSON()
+				.expectJSON(itemTest)
+				.afterJSON(function(itemResponseData){
+					var itemId = itemResponseData.Id
+					frisby.create('Delete item of a project')
+					.delete('https://todo.ly/api/items/'+ itemId +'.json', {json: true})
+					.expectJSON({
+						Deleted: true
+					})
+					.toss();
+					
+				})
+				.toss();
+	})
+	.toss();
 
-
+	
+	
 var project = {
 	"Content": "TestProject"
 };
@@ -115,6 +179,34 @@ frisby.create('Create User TODO.LY')
 					.expectJSON(responseUserData)
 					.toss();
 			})
+			.toss();
+		
+	})	
+.toss();
+
+var newUserId;
+frisby.create('Create User without session')
+	.post('https://todo.ly/api/user.json', {
+		"Email": "pedrito@gmail.com",
+		"FullName": "Joe Blow",
+		"Password": "5908732"
+		}, {json: true})
+	.expectStatus(200)	
+	.inspectJSON()
+	.expectJSON({
+		"Email": "pedrito@gmail.com",
+		"FullName": "Joe Blow"
+		})
+	.afterJSON(function(responseUserData){
+		newUserId = responseUserData.Id;
+		console.log('NEW PROJECT ID:', newUserId)
+		var updateUserEmail = {
+		"FullName": "Marco Mendieta"
+		};
+
+		frisby.create('Update whitout sesssion')
+			.put('https://todo.ly/api/user/'+ newUserId +'.json', updateUserEmail, {json: true})
+			.expectStatus(105)
 			.toss();
 		
 	})	
