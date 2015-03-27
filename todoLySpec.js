@@ -6,6 +6,7 @@ frisby.globalSetup({
 	request:{
 		headers: {
 			'Authorization': 'Basic bWFyY29zaXM2c3RlckBnbWFpbC5jb206NTkwODczMg=='
+			//marcosis6ster@gmail:5908732
 		},
 		//proxy: 'http://172.20.240.5:8080/'
 	}
@@ -117,8 +118,6 @@ frisby.create('Create project')
 		Id: Number
 	})
 	.afterJSON(function(json){
-		//console.log(body);
-		//var json = JSON.parse(body);
 		var newProjectId = json.Id;
 		console.log('NEW PROJECT ID:', newProjectId);
 		
@@ -145,6 +144,40 @@ frisby.create('Create project')
 
 
 
+
+var CurrentUserEmail = {
+"Email": "marcosis6ster@gmail.com"
+};
+var updateCurrentUserEmail = {
+"Email": "updated@gmail.com"
+};
+
+frisby.create('Get current user email User TODO.LY')
+	.get('https://todo.ly/api/user.json', CurrentUserEmail, {json: true})
+	.expectStatus(200)	
+	.inspectJSON()
+	.afterJSON(function(responseUserData){
+		newUserId = responseUserData.Id;
+		console.log('NEW PROJECT ID:', newUserId)
+		frisby.create('Update User name TODO.LY')
+		.put('https://todo.ly/api/user/'+ newUserId +'.json', updateCurrentUserEmail, {json: true})
+		.expectStatus(200)	
+		.inspectJSON()
+		.expectJSON(updateCurrentUserEmail)
+		.afterJSON(function(responseUserData){
+				updatedUserId = responseUserData.Id;
+				frisby.create('Delete User TODO.LY')
+					.delete('https://todo.ly/api/user/'+ updatedUserId +'.json', {json: true})
+					.expectStatus(200)	
+					.inspectJSON()
+					.expectJSON(responseUserData)
+					.toss();
+			})
+	})
+	.toss();
+	
+	
+/*
 var newUserId;
 frisby.create('Create User TODO.LY')
 	.post('https://todo.ly/api/user.json', {
@@ -165,7 +198,7 @@ frisby.create('Create User TODO.LY')
 		"FullName": "Marco Mendieta"
 		};
 
-		frisby.create('Update User TODO.LY')
+		frisby.create('Update User name TODO.LY')
 			.put('https://todo.ly/api/user/'+ newUserId +'.json', updateUserEmail, {json: true})
 			.expectStatus(200)	
 			.inspectJSON()
@@ -183,31 +216,4 @@ frisby.create('Create User TODO.LY')
 		
 	})	
 .toss();
-
-var newUserId;
-frisby.create('Create User without session')
-	.post('https://todo.ly/api/user.json', {
-		"Email": "pedrito@gmail.com",
-		"FullName": "Joe Blow",
-		"Password": "5908732"
-		}, {json: true})
-	.expectStatus(200)	
-	.inspectJSON()
-	.expectJSON({
-		"Email": "pedrito@gmail.com",
-		"FullName": "Joe Blow"
-		})
-	.afterJSON(function(responseUserData){
-		newUserId = responseUserData.Id;
-		console.log('NEW PROJECT ID:', newUserId)
-		var updateUserEmail = {
-		"FullName": "Marco Mendieta"
-		};
-
-		frisby.create('Update whitout sesssion')
-			.put('https://todo.ly/api/user/'+ newUserId +'.json', updateUserEmail, {json: true})
-			.expectStatus(105)
-			.toss();
-		
-	})	
-.toss();
+*/
