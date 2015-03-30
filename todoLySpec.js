@@ -12,6 +12,79 @@ frisby.globalSetup({
 	}
 });
 
+
+//Smoke Test
+
+var CurrentUserEmail = {
+"Email": "marcosis6ster@gmail.com"
+};
+var smokeProject = {
+	"Content": "smokeProject"
+};
+
+frisby.create('Verify the current user email')
+	.get('https://todo.ly/api/user.json', CurrentUserEmail, {json: true})
+	.expectStatus(200)	
+	.inspectJSON()
+	.expectJSON(CurrentUserEmail)
+	.afterJSON(function(itemResponseData){
+	//	
+		frisby.create('Create New project')
+			.post('https://todo.ly/api/projects.json', smokeProject, {json: true})
+			.inspectJSON()
+			.expectJSON(smokeProject)
+			.afterJSON(function(projectResponseData){
+				var projectTestId = projectResponseData.Id;
+				var updateSmokeProject = {
+					"Content": "updateSmokeProject"
+				};
+				frisby.create('Update Project')
+					.put('https://todo.ly/api/projects/' + projectTestId + '.json', updateSmokeProject, {json: true})
+					.expectJSON(updateSmokeProject)
+					.afterJSON(function(updatedProjectResponseData){
+					var updatedProjectTestId = updatedProjectResponseData.Id;
+					var itemTest  = {"Content": "TestItem", "ProjectId": updatedProjectTestId};
+					frisby.create('Create new item with the updated project id')
+						.post('https://todo.ly/api/items.json', itemTest,{json: true})
+						.inspectJSON()
+						.expectJSON(itemTest)
+						.afterJSON(function(itemResponseData){
+							var itemId = itemResponseData.Id
+							var updateItemTest  = {"Content": "updateTestItem"};
+							frisby.create('update item')
+							.put('https://todo.ly/api/items/' + itemId + '.json', updateItemTest, {json: true})
+							.expectJSON(updateItemTest)
+							.afterJSON(function(itemResponseData){
+		
+								frisby.create('Delete item')
+								.delete('https://todo.ly/api/items/' + itemId + '.json', {json: true})
+								.expectJSON({Deleted: true})
+								.afterJSON(function(itemResponseData){
+									projectIdToDelete = itemResponseData.ProjectId
+									frisby.create('Delete item')
+									.delete('https://todo.ly/api/projects/' + projectIdToDelete + '.json', {json: true})
+									.expectJSON({Deleted: true})
+								
+								})
+								.toss();
+								
+							})
+							.toss();
+							
+						})
+						.toss();
+											
+				})
+				.toss();
+		})
+		.toss();
+	//
+	})
+	.toss();
+	
+
+//CRUD Item
+
 var item = {
 	"Content": "TestItem"
 };
@@ -105,7 +178,7 @@ frisby.create('Create New project')
 	.toss();
 
 	
-	
+//CRUD project	
 var project = {
 	"Content": "TestProject"
 };
@@ -142,7 +215,7 @@ frisby.create('Create project')
 	})
 .toss();
 
-
+//CRUD User
 
 
 var CurrentUserEmail = {
@@ -176,7 +249,7 @@ frisby.create('Get current user email User TODO.LY')
 	})
 	.toss();
 	
-	
+
 /*
 var newUserId;
 frisby.create('Create User TODO.LY')
